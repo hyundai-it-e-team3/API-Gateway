@@ -1,12 +1,12 @@
 server:
-  port: 8000
+  port: 81
 
 eureka:
   client:
     fetch-registry: true
     register-with-eureka: true
     service-url:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://kosa1.iptime.org:50403/eureka/
 spring:
   application:
     name: gateway-service
@@ -15,20 +15,33 @@ spring:
     gateway:
       routes:
         - id: product
-          uri: lb://product # 포워딩할 주소,
+          uri: http://kosa1.iptime.org:50203 # 포워딩할 주소,
           predicates:
             - Path=/product-api/** # 해당 gateway 서버의 /product-api/**로 들어오는 요은 product로 인식하겠다는 조건
           filters:
             - RewritePath=/product-api/(?<segment>.*), /$\{segment}
         - id: order
-          uri: lb://order # 포워딩할 주소,
+          uri: http://kosa1.iptime.org:50214 # 포워딩할 주소,
           predicates:
-            - Path=/order-api/** # 해당 gateway 서버의 /order-api/**로 들어오는 요은 product로 인식하겠다는 조건
+            - Path=/order-api/** # 해당 gateway 서버의 /order-api/**로 들어오는 요은 order로 인식하겠다는 조건
           filters:
             - RewritePath=/order-api/(?<segment>.*), /$\{segment}
         - id: member
-          uri: lb://member # 포워딩할 주소,
+          uri: http://kosa1.iptime.org:50212 # 포워딩할 주소,
           predicates:
-            - Path=/member-api/** # 해당 gateway 서버의 /member-api/**로 들어오는 요은 product로 인식하겠다는 조건
+            - Path=/member-api/** # 해당 gateway 서버의 /member-api/**로 들어오는 요은 member로 인식하겠다는 조건
           filters:
             - RewritePath=/member-api/(?<segment>.*), /$\{segment}
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:8080"
+            allow-credentials: true   #추가
+            allowedHeaders: "*"
+            allowedMethods:
+              - POST
+              - GET
+              - PUT
+              - OPTIONS
+              - DELETE
+              - PATCH
