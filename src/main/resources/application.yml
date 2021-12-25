@@ -10,28 +10,41 @@ eureka:
 spring:
   application:
     name: gateway-service
-    
   cloud:
     gateway:
       routes:
-        - id: product
-          uri: http://kosa1.iptime.org:50203 # 포워딩할 주소,
+        - id: product-api
+          uri: lb://product-api # 포워딩할 주소,
           predicates:
             - Path=/product-api/** # 해당 gateway 서버의 /product-api/**로 들어오는 요은 product로 인식하겠다는 조건
           filters:
             - RewritePath=/product-api/(?<segment>.*), /$\{segment}
-        - id: order
+        - id: order-api
           uri: http://kosa1.iptime.org:50214 # 포워딩할 주소,
           predicates:
             - Path=/order-api/** # 해당 gateway 서버의 /order-api/**로 들어오는 요은 order로 인식하겠다는 조건
           filters:
             - RewritePath=/order-api/(?<segment>.*), /$\{segment}
-        - id: member
+            - CustomAuthFilter
+        - id: member-api
+          uri: http://kosa1.iptime.org:50212 # 포워딩할 주소,
+          predicates:
+            - Path=/member-api/member/login # 해당 gateway 서버의 /member-api/**로 들어오는 요은 member로 인식하겠다는 조건
+          filters:
+            - RewritePath=/member-api/(?<segment>.*), /$\{segment}
+        - id: member-api
+          uri: http://kosa1.iptime.org:50212 # 포워딩할 주소,
+          predicates:
+            - Path=/member-api/member/join # 해당 gateway 서버의 /member-api/**로 들어오는 요은 member로 인식하겠다는 조건
+          filters:
+            - RewritePath=/member-api/(?<segment>.*), /$\{segment}
+        - id: member-api
           uri: http://kosa1.iptime.org:50212 # 포워딩할 주소,
           predicates:
             - Path=/member-api/** # 해당 gateway 서버의 /member-api/**로 들어오는 요은 member로 인식하겠다는 조건
           filters:
             - RewritePath=/member-api/(?<segment>.*), /$\{segment}
+            - CustomAuthFilter
       globalcors:
         corsConfigurations:
           '[/**]':
