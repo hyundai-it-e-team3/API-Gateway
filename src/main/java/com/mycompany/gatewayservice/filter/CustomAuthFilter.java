@@ -1,4 +1,4 @@
-package com.mycompany.gatewayservice.config;
+package com.mycompany.gatewayservice.filter;
 
 import java.util.List;
 import java.util.Objects;
@@ -11,9 +11,14 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.stereotype.Component;
 import org.springframework.web.server.ServerWebExchange;
 
+import com.mycompany.gatewayservice.security.JwtUtil;
+
+import io.jsonwebtoken.Claims;
+import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 @Component
+@Slf4j
 public class CustomAuthFilter extends AbstractGatewayFilterFactory<CustomAuthFilter.Config> {
     public CustomAuthFilter() {
         super(Config.class);
@@ -24,19 +29,35 @@ public class CustomAuthFilter extends AbstractGatewayFilterFactory<CustomAuthFil
         return ((exchange, chain) -> {
             ServerHttpRequest request = exchange.getRequest();
 
-            // Request Header 에 token 이 존재하지 않을 때
-            if(!request.getHeaders().containsKey("token")){
-                return handleUnAuthorized(exchange); // 401 Error
-            }
-
-            // Request Header 에서 token 문자열 받아오기
-            List<String> token = request.getHeaders().get("token");
-            String tokenString = Objects.requireNonNull(token).get(0);
-
-            // 토큰 검증
-            if(!tokenString.equals("A.B.C")) {
-                return handleUnAuthorized(exchange); // 토큰이 일치하지 않을 때
-            }
+    		String jwt = null;
+    		if(request.getHeaders().containsKey("Authorization")&& 
+    				request.getHeaders().get("Authorization").get(0).startsWith("Bearer")) {
+    			jwt = request.getHeaders().get("Authorization").get(0).substring(7);
+    		} else {
+    			 log.info("----------no toekn");
+    			 return handleUnAuthorized(exchange); // 토큰이 일치하지 않을 때
+    		}
+    		
+    			
+    		
+    		log.info("jwt : " + jwt);
+    		
+    		if(jwt != null) {
+    			Claims claims = JwtUtil.validateToken(jwt);
+    			if(claims != null) {
+    				log.info("유효한 토큰");
+    				String memberId = JwtUtil.getMemberId(claims);
+    				String authority = JwtUtil.getAuthority(claims);
+    				log.info("memberId : " + memberId);
+    				log.info("authority : " + authority);
+    				
+    				
+    			} else {
+    				log.info("유효하지 않은 토큰");
+    			}
+    		}else {
+    			return handleUnAuthorized(exchange); // 토큰이 일치하지 않을 때
+    		}
 
             return chain.filter(exchange); // 토큰이 일치할 때
 
